@@ -1,112 +1,70 @@
-# Pawn Wars — Python + Prolog Hybrid Web App
+# Pawn Wars
 
-A playable two-player chess variant containing only Kings and Pawns.
-The human plays White; the AI plays Black using **Minimax with Alpha-Beta Pruning**.
-All game rules and legal-move generation live entirely in **Prolog**.
-Python handles the AI search engine and web server.
-The browser UI uses **chessboard.js** — pieces are draggable, legal destinations
-glow green, and the board updates automatically after every AI move.
+A king-and-pawn chess endgame practice tool. Play freely against a Minimax AI (Alpha-Beta Pruning, depth-adjustable), then see the Stockfish-correct solution afterward. Positions are loaded from a preprocessed Lichess puzzle database. All chess rules live in Prolog; Python handles search and serves the web interface.
 
 ---
 
-## Prerequisites
+## Requirements
 
-| Requirement | Version | Download |
-|---|---|---|
-| SWI-Prolog | **9.1.12 or newer** | https://www.swi-prolog.org/Download.html |
-| Python | 3.9 or newer | https://www.python.org/downloads/ |
-
-Make sure `swipl` is on your system PATH after installing SWI-Prolog.
-Verify with: `swipl --version`
+- Python 3.10+
+- SWI-Prolog 9.1.12 or newer (required for the Janus bridge)
 
 ---
 
-## Setup & Run
+## Setup
+
+### 1. Install SWI-Prolog
+
+**Windows:** Download and run the installer from [https://www.swi-prolog.org/download/stable](https://www.swi-prolog.org/download/stable). During installation, check the option to add SWI-Prolog to PATH.
+
+**Mac:**
+```bash
+brew install swi-prolog
+```
+
+### 2. Install Python dependencies
 
 ```bash
-# 1. Install Python dependencies
 pip install -r requirements.txt
+```
 
-# 2. Start the server
+### 3. Run
+
+```bash
 python app.py
-
-# 3. Open your browser
-#    http://localhost:5000
 ```
 
-No other configuration is needed.
+Open [http://localhost:5000](http://localhost:5000) in your browser.
+
+At startup the app runs four self-checks (Prolog bridge, puzzle database, legal move assertion, transposition cache). If any fail, the error message will tell you exactly what is wrong.
 
 ---
 
-## How to Play
+## Puzzle database
 
-- **Drag** any white piece onto the board.
-- Legal destination squares **glow green** as soon as you pick up a piece.
-- Drop the piece on a legal square to confirm your move.
-- The AI (Black) responds automatically; its move animates on the board.
-- Click **New Game** to reset. Use the **Search depth** selector to make the AI
-  stronger (depth 4 is the default; depth 5–6 is noticeably stronger but slower).
+`puzzles.json` is included and ready to use. If you want to rebuild it from a fresh Lichess dump:
 
-### Win conditions (enforced by Prolog)
-- A pawn promotes — white reaches row 8, or black reaches row 1.
-- A side loses all its pawns.
+1. Download `lichess_db_puzzle.csv` from [https://database.lichess.org/#puzzles](https://database.lichess.org/#puzzles)
+2. Place it in the project root
+3. Run `python build_puzzle_db.py`
 
-### Starting position
+---
+
+## Project structure
+
 ```
-8  . . . . k . . .    black king  e8
-7  p . . p . . . p    black pawns a7, d7, h7
-   …
-2  P . . P . . . P    white pawns a2, d2, h2
-1  . . . . K . . .    white king  e1
-   a b c d e f g h
+app.py              Flask server and game loop
+engine.py           Minimax with Alpha-Beta Pruning
+board.py            Board representation and Prolog bridge
+pawn_wars.pl        Prolog knowledge base (all chess rules)
+build_puzzle_db.py  Offline puzzle preprocessor
+puzzles.json        Preprocessed Lichess endgame positions
+templates/
+  index.html        Single-page browser UI
 ```
 
 ---
 
-## Alpha-Beta Pruning Analysis
+## Known issue on Windows
 
-Click **Compare AB on vs off** in the sidebar to run the Minimax search twice
-from the current position — once with Alpha-Beta Pruning and once without —
-and see how many nodes each version evaluates.  
-These numbers can be copied directly into the project report.
-
----
-
-## File Overview
-
-| File | Purpose |
-|---|---|
-| `pawn_wars.pl` | Prolog knowledge base — all game rules, move generation, win conditions |
-| `board.py` | Board representation (dict), Janus bridge, FEN conversion |
-| `engine.py` | Minimax + Alpha-Beta, move cache, evaluation function, node counter |
-| `app.py` | Flask web server — four REST endpoints |
-| `templates/index.html` | Browser UI — chessboard.js, jQuery, game controls |
-| `requirements.txt` | Python package list |
-
----
-
-## Architecture Notes
-
-### Bridge
-Python talks to Prolog via **Janus** (`janus_swi`), which embeds SWI-Prolog
-in-process. SWI-Prolog 10.0.2 was used during development.
-
-### Strict rendering rule
-`chessboard.js` receives a **FEN string** from the Python server and renders
-the board.  No chess library is used for logic, legal-move generation, or
-state management.  All of that lives in `pawn_wars.pl`.
-
-### King move limitation (documented intentional design)
-King moves do **not** check whether the destination square is attacked.
-This prevents a circular dependency in Prolog (move generation would call
-itself to determine attacked squares).  The AI never makes a suicidal king
-move in practice because Minimax sees the resulting capture at the next ply
-and scores it as catastrophic.  This is *emergent self-preservation through
-look-ahead*, not a hardcoded constraint, and should be described as such in
-the project report.
-
-### Move cache
-Before querying Prolog for legal moves at any node in the search tree, the
-engine checks a Python dictionary keyed by board state and colour.  On a
-cache hit the Prolog bridge is not called.  This prevents bridge performance
-collapse during deep recursion.
+If `janus_swi` fails to import, make sure the SWI-Prolog `bin` directory is on your system PATH and that you are using SWI-Prolog 9.1.12 or newer. The version that ships with some package managers is too old.
