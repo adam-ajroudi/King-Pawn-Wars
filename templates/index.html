@@ -443,17 +443,16 @@ function updateInfo(data) {
   gameOver    = data.game_over;
 
   if (data.game_over) {
-    if (data.winner === 'white') {
-      setStatus('White wins!', 's-win-w');
-      showBanner(humanColor === 'white' ? 'You win! \uD83C\uDFC6' : 'AI wins!',
-                 humanColor === 'white' ? 'banner-white' : 'banner-black');
-    } else if (data.winner === 'black') {
-      setStatus('Black wins!', 's-win-b');
-      showBanner(humanColor === 'black' ? 'You win! \uD83C\uDFC6' : 'AI wins!',
-                 humanColor === 'black' ? 'banner-white' : 'banner-black');
+    var youWin = (data.winner === humanColor);
+    var aiWin  = (data.winner && data.winner !== humanColor && data.winner !== 'draw');
+    if (data.winner === 'white' || data.winner === 'black') {
+      var winColor = data.winner.charAt(0).toUpperCase() + data.winner.slice(1);
+      setStatus(winColor + ' wins!', data.winner === 'white' ? 's-win-w' : 's-win-b');
+      showBanner(youWin ? 'You win! \uD83C\uDFC6' : 'AI wins!',
+                 youWin ? 'banner-white' : 'banner-black');
     } else if (data.winner === 'draw') {
-      setStatus('Draw \u2014 same position three times', 's-draw');
-      showBanner('Draw \u2014 repetition', 'banner-draw');
+      setStatus('Draw \u2014 kings only', 's-draw');
+      showBanner('Draw \u2014 kings only', 'banner-draw');
     } else {
       setStatus('Stalemate \u2014 draw!', 's-draw');
       showBanner('Stalemate \u2014 Draw!', 'banner-draw');
@@ -685,15 +684,16 @@ function exportHistory() {
 // ── Tag dropdown ──────────────────────────────────────────────────────────────
 
 function loadTags() {
-  $.get('/api/puzzles/tags', function(tags) {
-    var sel = $('#tag-select');
-    tags.forEach(function(tag) {
-      var label = tag
-        .replace('passed_pawn_demo',       'Report: Advanced Pawn')
-        .replace('king_opposition_demo',   'Report: King Opposition (Zugzwang)')
-        .replace('pawn_sacrifice_demo',    'Report: Pawn Sacrifice / Promotion');
-      sel.append('<option value="' + tag + '">' + label + '</option>');
-    });
+  // Only expose the three report-specific demo positions plus Random.
+  // All other Lichess theme tags are intentionally hidden from the UI.
+  var demoTags = [
+    { value: 'passed_pawn_demo',     label: 'Report: Advanced Pawn' },
+    { value: 'king_opposition_demo', label: 'Report: King Opposition (Zugzwang)' },
+    { value: 'pawn_sacrifice_demo',  label: 'Report: Pawn Sacrifice / Promotion' },
+  ];
+  var sel = $('#tag-select');
+  demoTags.forEach(function(t) {
+    sel.append('<option value="' + t.value + '">' + t.label + '</option>');
   });
 }
 

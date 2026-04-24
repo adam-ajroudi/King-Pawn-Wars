@@ -115,6 +115,27 @@ def _reset(depth: int = 4, puzzle: dict | None = None) -> None:
     )
 
 
+def _king_in_pawn_check(board: dict, color: str) -> bool:
+    """
+    Return True when the king of *color* is on a square currently attacked
+    by an enemy pawn.  Used to distinguish checkmate from stalemate when a
+    player has zero legal moves.
+    """
+    king = next((sq for sq, v in board.items() if v == (color, "king")), None)
+    if not king:
+        return False
+    kc, kr = king
+    opp = "black" if color == "white" else "white"
+    for (pc, pr), (c, t) in board.items():
+        if c != opp or t != "pawn":
+            continue
+        if opp == "white" and pr + 1 == kr and abs(pc - kc) == 1:
+            return True
+        if opp == "black" and pr - 1 == kr and abs(pc - kc) == 1:
+            return True
+    return False
+
+
 def _register_position(board: dict, turn: str) -> bool:
     """
     Record that (board, turn) has been reached again.
@@ -358,11 +379,18 @@ def api_move():
     _state["last_ai_nodes"] = nodes
 
     if ai_move_tuple is None:
-        _state.update(game_over=True, turn="none")
-        if ai_color == "black":
-            history_entry["black"] = "stalemate"
+        # Distinguish pawn-checkmate from stalemate:
+        # if AI king is under pawn attack → attacker (human) wins; else draw.
+        ai_in_check = _king_in_pawn_check(board, ai_color)
+        if ai_in_check:
+            _state.update(game_over=True, winner=human_color, turn="none")
         else:
-            history_entry["white"] = "stalemate"
+            _state.update(game_over=True, winner=None, turn="none")
+        no_move_label = "checkmate" if ai_in_check else "stalemate"
+        if ai_color == "black":
+            history_entry["black"] = no_move_label
+        else:
+            history_entry["white"] = no_move_label
         _state["move_history"].append(history_entry)
         return jsonify({"status": "ok", "ai_move": None, **_state_payload()})
 
@@ -383,6 +411,14 @@ def api_move():
         _state.update(game_over=True, winner="draw", turn="none")
     else:
         _state["turn"] = human_color
+        # Check if human now has no legal moves (stalemate / checkmate)
+        human_moves = get_legal_moves(board, human_color)
+        if not human_moves:
+            human_in_check = _king_in_pawn_check(board, human_color)
+            if human_in_check:
+                _state.update(game_over=True, winner=ai_color, turn="none")
+            else:
+                _state.update(game_over=True, winner=None, turn="none")
 
     _state["move_history"].append(history_entry)
     return jsonify({"status": "ok", "ai_move": ai_alg, **_state_payload()})
