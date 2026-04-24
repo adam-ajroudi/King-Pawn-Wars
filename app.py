@@ -459,10 +459,13 @@ def api_compare():
     data          = request.get_json(silent=True) or {}
     compare_depth = max(2, min(5, int(data.get("compare_depth", 3))))
     board         = _state["board"]
-    ai_color      = _state.get("ai_color", "black")
+
+    # Always analyze from the AI's color perspective — the comparison is about
+    # measuring engine efficiency (AB vs plain Minimax), not about the human's moves.
+    analyze_color = _state.get("ai_color", "black")
 
     count_ab, count_no_ab, move_ab, move_no_ab = compare_node_counts(
-        board, depth=compare_depth, ai_color=ai_color
+        board, depth=compare_depth, ai_color=analyze_color
     )
     reduction      = (1 - count_ab / count_no_ab) * 100 if count_no_ab else 0
     move_ab_alg    = move_to_alg(move_ab)    if move_ab    else "—"
@@ -470,6 +473,7 @@ def api_compare():
 
     return jsonify({
         "depth":           compare_depth,
+        "analyze_color":   analyze_color,
         "with_ab":         count_ab,
         "without_ab":      count_no_ab,
         "reduction":       round(reduction, 1),
