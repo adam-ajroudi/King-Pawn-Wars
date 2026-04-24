@@ -14,6 +14,8 @@ POST /api/new_game   – reset to initial position
 POST /api/compare    – node-count comparison (AB on vs off) from current position
 """
 
+from collections import defaultdict
+
 from flask import Flask, render_template, jsonify, request
 
 from board import (
@@ -31,11 +33,19 @@ app = Flask(__name__)
 _state: dict = {}
 
 
+def _position_key(board: dict, turn: str) -> tuple:
+    """Stable key for (board layout, side to move) — used for repetition draws."""
+    return (tuple(sorted(board.items())), turn)
+
+
 def _reset(depth: int = 4) -> None:
     """Reinitialise game state to the starting position."""
     clear_cache()
+    b0 = initial_board()
+    counts = defaultdict(int)
+    counts[_position_key(b0, "white")] = 1
     _state.update(
-        board         = initial_board(),
+        board         = b0,
         turn          = "white",
         game_over     = False,
         winner        = None,
@@ -43,7 +53,18 @@ def _reset(depth: int = 4) -> None:
         ai_depth      = depth,
         move_history  = [],        # list of {white, black, nodes}
         fen_after_white = None,    # FEN snapshot sent to JS for animation
+        position_counts = counts,  # threefold-style: same key 3 times → draw
     )
+
+
+def _register_position(board: dict, turn: str) -> bool:
+    """
+    Record that (board, turn) has been reached again.
+    Returns True if this is the third occurrence (draw by repetition).
+    """
+    key = _position_key(board, turn)
+    _state["position_counts"][key] += 1
+    return _state["position_counts"][key] >= 3
 
 
 _reset()   # initialise once at startup
@@ -145,6 +166,12 @@ def api_move():
         _state["move_history"].append(history_entry)
         return jsonify({"status": "ok", "ai_move": None, **_state_payload()})
 
+    if _register_position(board, "black"):
+        _state.update(game_over=True, winner="draw", turn="none")
+        history_entry["black"] = "(draw)"
+        _state["move_history"].append(history_entry)
+        return jsonify({"status": "ok", "ai_move": None, **_state_payload()})
+
     # ── AI (Black) responds ───────────────────────────────────────────────────
     _state["turn"] = "black"
     ai_move, nodes = best_move(board, depth=_state["ai_depth"])
@@ -166,6 +193,8 @@ def api_move():
     winner = check_winner(board)
     if winner:
         _state.update(game_over=True, winner=winner, turn="none")
+    elif _register_position(board, "white"):
+        _state.update(game_over=True, winner="draw", turn="none")
     else:
         _state["turn"] = "white"
 

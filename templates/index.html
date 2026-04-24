@@ -450,6 +450,9 @@ function updateInfo(data) {
     } else if (data.winner === 'black') {
       setStatus('Black (AI) wins!', 's-win-b');
       showBanner('AI wins!', 'banner-black');
+    } else if (data.winner === 'draw') {
+      setStatus('Draw \u2014 same position three times', 's-draw');
+      showBanner('Draw \u2014 repetition', 'banner-draw');
     } else {
       setStatus('Stalemate \u2014 draw!', 's-draw');
       showBanner('Stalemate \u2014 Draw!', 'banner-draw');

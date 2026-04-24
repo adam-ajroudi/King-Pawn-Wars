@@ -1,9 +1,8 @@
 %% pawn_wars.pl
 %% Pawn Wars game logic knowledge base.
 %% All move generation, rule validation, and win conditions live here.
-%% No attack-checking is applied to king moves to avoid circular dependency
-%% loops (a king is not forbidden from stepping into an attacked square).
-%% The Minimax engine handles self-preservation through look-ahead instead.
+%% King moves filter destinations using direct board checks (enemy pawn attacks,
+%% enemy king adjacency) so the rule engine stays non-circular.
 %%
 %% Board representation:
 %%   A board is a list of piece/4 terms: piece(Color, Type, Col, Row)
@@ -131,6 +130,16 @@ square_safe_for_king(Board, Color, TC, TR) :-
         pawn_attacks_square(Opp, PC, PR, TC, TR)
     ).
 
+%% king_square_avoids_enemy_king/4 – true when (ToCol, ToRow) lies outside the
+%% opponent king’s Chebyshev-1 zone (same rule as “king may not move into check”
+%% from the other king: the two kings may never occupy adjacent squares).
+king_square_avoids_enemy_king(Board, Color, ToCol, ToRow) :-
+    opponent(Color, Opp),
+    member(piece(Opp, king, EKC, EKR), Board),
+    DC is abs(ToCol - EKC),
+    DR is abs(ToRow - EKR),
+    \+ (DC =< 1, DR =< 1).
+
 
 %% ─── King moves ─────────────────────────────────────────────────────────────
 
@@ -139,9 +148,10 @@ square_safe_for_king(Board, Color, TC, TR) :-
 %%   • the destination is within the 8×8 board,
 %%   • the destination is not occupied by a friendly piece,
 %%   • the destination is not occupied by any king (kings are never capturable),
+%%   • the destination is not adjacent to the enemy king (kings may not touch),
 %%   • the destination is not attacked by an enemy pawn.
-%%     (Attack-checking is done via direct arithmetic pattern matching rather
-%%     than via the move generator, which would create a circular dependency.)
+%%     (Pawn attack and king-distance checks use direct board inspection rather
+%%     than the move generator, so there is no circular dependency.)
 %%
 %% NOTE: \+ (DC =:= 0, DR =:= 0) is used instead of (DC \= 0 ; DR \= 0)
 %% because the disjunction form is non-deterministic inside findall: when both
@@ -158,6 +168,7 @@ king_moves(Board, Color, Col, Row, Moves) :-
           ToRow >= 1, ToRow =< 8,
           \+ friendly(Board, Color, ToCol, ToRow),
           \+ member(piece(_, king, ToCol, ToRow), Board),
+          king_square_avoids_enemy_king(Board, Color, ToCol, ToRow),
           square_safe_for_king(Board, Color, ToCol, ToRow) ),
         Moves
     ).

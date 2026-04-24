@@ -43,28 +43,106 @@ def clear_cache() -> None:
 # ── Static evaluation function ────────────────────────────────────────────────
 # Scores the board from White's perspective.
 # Positive values favour White; negative values favour Black.
+#
+# Three components:
+#   1. Material         – 100 per pawn on each side.
+#   2. Advancement      – accelerating bonus so pawns near promotion are prized
+#                         far more than pawns just off the starting rank.
+#   3. Passed pawn      – a pawn with no enemy pawn blocking its file or either
+#                         adjacent file gets a large extra bonus; it has a clear
+#                         path to promotion.
+#   4. King activity    – reward each king for being close to the nearest enemy
+#                         pawn (to block or capture it) and to its own most
+#                         advanced pawn (to escort it).
 
-_PAWN_VALUE = 100       # material value of each pawn
-_ADVANCE_BONUS = 12     # bonus per rank of pawn advancement beyond starting rank
-_KING_VALUE = 0         # kings are always present; no differential value added
+_PAWN_VALUE = 100
+
+# Advancement bonus indexed by ranks advanced (0 = starting rank, 5 = one step
+# from promotion).  Values accelerate sharply toward promotion.
+_ADVANCE_TABLE = [0, 10, 25, 50, 90, 150]
+
+_PASSED_PAWN_BONUS = 60    # extra value for a pawn with a clear promotion path
+_KING_BLOCK   = 4          # per-square bonus for king closeness to enemy pawns
+_KING_ESCORT  = 2          # per-square bonus for king closeness to own pawns
+
+
+def _chebyshev(c1: int, r1: int, c2: int, r2: int) -> int:
+    """Chebyshev (king-move) distance between two squares."""
+    return max(abs(c1 - c2), abs(r1 - r2))
+
+
+def _is_passed(board: dict, color: str, col: int, row: int) -> bool:
+    """
+    True when the pawn of *color* at (col, row) has no opposing pawn on the
+    same file or either adjacent file that is ahead of it (i.e. between it
+    and its promotion rank).  Such a pawn cannot be directly stopped by another
+    pawn and is therefore much more dangerous.
+    """
+    opp = "black" if color == "white" else "white"
+    for (pc, pr), (pcolor, ptype) in board.items():
+        if pcolor != opp or ptype != "pawn":
+            continue
+        if abs(pc - col) <= 1:                    # same or adjacent file
+            if color == "white" and pr > row:     # blocking pawn is ahead
+                return False
+            if color == "black" and pr < row:
+                return False
+    return True
 
 
 def evaluate(board: dict) -> int:
     """
-    Heuristic score from White's perspective:
-      +100 per white pawn   – 100 per black pawn   (material)
-      +12  per rank a white pawn has advanced beyond row 2
-      –12  per rank a black pawn has advanced beyond row 7 (i.e. descending)
+    Heuristic score from White's perspective.
+    Higher = better for White; lower = better for Black.
     """
+    white_pawns = [(c, r) for (c, r), (col, pt) in board.items()
+                   if col == "white" and pt == "pawn"]
+    black_pawns = [(c, r) for (c, r), (col, pt) in board.items()
+                   if col == "black" and pt == "pawn"]
+    white_king  = next(((c, r) for (c, r), (col, pt) in board.items()
+                        if col == "white" and pt == "king"), None)
+    black_king  = next(((c, r) for (c, r), (col, pt) in board.items()
+                        if col == "black" and pt == "king"), None)
+
     score = 0
-    for (col, row), (color, ptype) in board.items():
-        if ptype == "pawn":
-            if color == "white":
-                score += _PAWN_VALUE
-                score += (row - 2) * _ADVANCE_BONUS   # row 2 → 0, row 7 → +60
-            else:
-                score -= _PAWN_VALUE
-                score -= (7 - row) * _ADVANCE_BONUS   # row 7 → 0, row 2 → -60
+
+    # ── White pawns ───────────────────────────────────────────────────────────
+    for (col, row) in white_pawns:
+        score += _PAWN_VALUE
+        score += _ADVANCE_TABLE[min(row - 2, 5)]          # advancement
+        if _is_passed(board, "white", col, row):
+            score += _PASSED_PAWN_BONUS
+
+    # ── Black pawns ───────────────────────────────────────────────────────────
+    for (col, row) in black_pawns:
+        score -= _PAWN_VALUE
+        score -= _ADVANCE_TABLE[min(7 - row, 5)]          # advancement
+        if _is_passed(board, "black", col, row):
+            score -= _PASSED_PAWN_BONUS
+
+    # ── King activity ─────────────────────────────────────────────────────────
+    if white_king:
+        wkc, wkr = white_king
+        # White king close to enemy pawns → good (blocking / threatening capture)
+        if black_pawns:
+            d = min(_chebyshev(wkc, wkr, pc, pr) for pc, pr in black_pawns)
+            score += (8 - d) * _KING_BLOCK
+        # White king close to own most-advanced pawn → good (escort)
+        if white_pawns:
+            d = min(_chebyshev(wkc, wkr, pc, pr) for pc, pr in white_pawns)
+            score += (8 - d) * _KING_ESCORT
+
+    if black_king:
+        bkc, bkr = black_king
+        # Black king close to white pawns → bad for White (blocking our pawns)
+        if white_pawns:
+            d = min(_chebyshev(bkc, bkr, pc, pr) for pc, pr in white_pawns)
+            score -= (8 - d) * _KING_BLOCK
+        # Black king close to own most-advanced pawn → bad for White (escort)
+        if black_pawns:
+            d = min(_chebyshev(bkc, bkr, pc, pr) for pc, pr in black_pawns)
+            score -= (8 - d) * _KING_ESCORT
+
     return score
 
 
