@@ -294,6 +294,8 @@
       </div>
       <div id="compare-result" style="display:none">
         <div class="compare-grid">
+          <span class="cg-label">Analyzing</span>
+          <span class="cg-value cg-move" id="c-color">—</span>
           <span class="cg-label">With Alpha-Beta</span>
           <span class="cg-value" id="c-ab">—</span>
           <span class="cg-label">Without Alpha-Beta</span>
@@ -679,6 +681,10 @@ function runCompare() {
     contentType: 'application/json',
     data:        JSON.stringify({ compare_depth: compareDepth }),
     success: function(data) {
+      var colorLabel = data.analyze_color
+        ? (data.analyze_color.charAt(0).toUpperCase() + data.analyze_color.slice(1))
+        : '—';
+      $('#c-color').text(colorLabel);
       $('#c-ab').text(data.with_ab.toLocaleString() + ' nodes');
       $('#c-noab').text(data.without_ab.toLocaleString() + ' nodes');
       $('#c-reduction').text(data.reduction + '% fewer');
@@ -736,6 +742,11 @@ function loadTags() {
   var sel = $('#tag-select');
   demoTags.forEach(function(t) {
     sel.append('<option value="' + t.value + '">' + t.label + '</option>');
+  });
+  // Changing the puzzle type must load that puzzle; otherwise the board still
+  // shows whatever random position the server picked at startup.
+  sel.off('change.puzzleTag').on('change.puzzleTag', function() {
+    newGame();
   });
 }
 

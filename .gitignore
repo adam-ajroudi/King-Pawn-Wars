@@ -6,7 +6,12 @@ __pycache__/
 venv/
 env/
 
-# Large Lichess dumps (re-download from open database; run build_puzzle_db.py)
-lichess_db_puzzle.csv
-lichess_pawn_endgames.pgn
-lichess_db_puzzle.csv.zst
+# Large data files (re-download from Lichess open database)
+*.csv
+*.pgn
+*.zst
+
+# Project docs, report, and screenshots (local only)
+Docs/
+report/
+images/
