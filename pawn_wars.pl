@@ -130,6 +130,22 @@ square_safe_for_king(Board, Color, TC, TR) :-
         pawn_attacks_square(Opp, PC, PR, TC, TR)
     ).
 
+%% king_not_in_check/2 – true when Color’s king sits on a square not attacked
+%% by any enemy pawn (after a move, this must hold for the side that moved).
+king_not_in_check(Board, Color) :-
+    member(piece(Color, king, Kc, Kr), Board),
+    square_safe_for_king(Board, Color, Kc, Kr).
+
+%% apply_move_board/3 – result of applying move(FC,FR,TC,TR) on Board (captures
+%% any piece on the destination). Used only to filter pseudo-legal moves.
+apply_move_board(Board, move(FC, FR, TC, TR), NewBoard) :-
+    select(piece(Color, Type, FC, FR), Board, B1),
+    ( select(piece(_, _, TC, TR), B1, B2)
+    -> true
+    ;  B2 = B1
+    ),
+    NewBoard = [piece(Color, Type, TC, TR) | B2].
+
 %% king_square_avoids_enemy_king/4 – true when (ToCol, ToRow) lies outside the
 %% opponent king’s Chebyshev-1 zone (same rule as “king may not move into check”
 %% from the other king: the two kings may never occupy adjacent squares).
@@ -190,6 +206,7 @@ piece_moves(Board, Color, king, Col, Row, Moves) :-
 
 %% legal_moves/3 – produces the flat list of all legal moves for Color on Board.
 %% Each move is an internal move(FromCol, FromRow, ToCol, ToRow) term.
+%% Drops pseudo-legal moves that leave Color’s king in pawn check.
 legal_moves(Board, Color, AllMoves) :-
     findall(
         MovesForPiece,
@@ -197,7 +214,14 @@ legal_moves(Board, Color, AllMoves) :-
           piece_moves(Board, Color, Type, Col, Row, MovesForPiece) ),
         MoveLists
     ),
-    flatten(MoveLists, AllMoves).
+    flatten(MoveLists, RawMoves),
+    findall(
+        M,
+        ( member(M, RawMoves),
+          apply_move_board(Board, M, NewB),
+          king_not_in_check(NewB, Color) ),
+        AllMoves
+    ).
 
 %% legal_moves_py/3 – Python-facing variant that returns each move as a
 %% four-element integer list [FC, FR, TC, TR] rather than a compound term,

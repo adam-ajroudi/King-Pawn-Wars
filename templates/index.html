@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pawn Wars — Python + Prolog AI</title>
 
-  <!-- chessboard.js styles -->
   <link rel="stylesheet"
     href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
 
@@ -31,19 +30,10 @@
       align-items: center;
       gap: 16px;
     }
-    header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #f8fafc;
-      letter-spacing: -0.5px;
-    }
+    header h1 { font-size: 1.5rem; font-weight: 700; color: #f8fafc; letter-spacing: -0.5px; }
     header .tag {
-      font-size: 0.72rem;
-      color: #64748b;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 4px;
-      padding: 2px 8px;
+      font-size: 0.72rem; color: #64748b; background: #0f172a;
+      border: 1px solid #334155; border-radius: 4px; padding: 2px 8px;
     }
 
     /* ── Main layout ───────────────────────────────────────────────────── */
@@ -52,78 +42,46 @@
       display: flex;
       gap: 24px;
       padding: 24px 28px;
-      max-width: 1060px;
+      max-width: 1100px;
       width: 100%;
       margin: 0 auto;
     }
 
     /* ── Board column ──────────────────────────────────────────────────── */
-    .board-col {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      flex-shrink: 0;
-    }
-
+    .board-col { display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
     #board { width: 480px; }
 
-    /* Square highlights (legal move indicators) */
     #board .square-55d63 { position: relative; }
-    .highlight-src  { box-shadow: inset 0 0 0 4px #f59e0b; }
-    .highlight-dst  { box-shadow: inset 0 0 0 4px #22c55e; }
+    .highlight-src { box-shadow: inset 0 0 0 4px #f59e0b; }
+    .highlight-dst { box-shadow: inset 0 0 0 4px #22c55e; }
 
-    /* Thinking bar below board */
     #thinking-bar {
-      display: none;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      color: #60a5fa;
+      display: none; align-items: center; gap: 10px; padding: 8px 12px;
+      background: #1e293b; border: 1px solid #334155; border-radius: 6px;
+      font-size: 0.85rem; color: #60a5fa;
     }
-
     .spinner {
-      width: 16px; height: 16px;
-      border: 2px solid #334155;
-      border-top-color: #60a5fa;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      flex-shrink: 0;
+      width: 16px; height: 16px; border: 2px solid #334155;
+      border-top-color: #60a5fa; border-radius: 50%;
+      animation: spin 0.7s linear infinite; flex-shrink: 0;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Info column ───────────────────────────────────────────────────── */
-    .info-col {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      min-width: 240px;
-    }
+    .info-col { flex: 1; display: flex; flex-direction: column; gap: 12px; min-width: 260px; }
 
     /* ── Cards ─────────────────────────────────────────────────────────── */
     .card {
-      background: #1e293b;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      padding: 14px 16px;
+      background: #1e293b; border: 1px solid #334155;
+      border-radius: 8px; padding: 14px 16px;
     }
     .card-label {
-      font-size: 0.68rem;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: #475569;
-      margin-bottom: 8px;
+      font-size: 0.68rem; text-transform: uppercase; letter-spacing: 1.2px;
+      color: #475569; margin-bottom: 8px;
     }
 
     /* Status */
-    #status-text {
-      font-size: 1.05rem;
-      font-weight: 600;
-    }
+    #status-text { font-size: 1.05rem; font-weight: 600; }
     .s-white  { color: #f8fafc; }
     .s-black  { color: #64748b; }
     .s-win-w  { color: #4ade80; }
@@ -131,108 +89,99 @@
     .s-draw   { color: #facc15; }
 
     /* Controls */
-    .controls {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+    .controls { display: flex; flex-direction: column; gap: 8px; }
+    .ctrl-row  { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     button {
-      padding: 7px 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      transition: filter 0.15s;
+      padding: 7px 16px; border: none; border-radius: 5px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 600; transition: filter 0.15s;
     }
     button:hover:not(:disabled) { filter: brightness(1.15); }
     button:disabled { opacity: 0.45; cursor: not-allowed; }
     .btn-primary   { background: #3b82f6; color: #fff; }
     .btn-secondary { background: #334155; color: #cbd5e1; }
+    .btn-green     { background: #16a34a; color: #fff; }
 
     select {
-      background: #0f172a;
-      color: #cbd5e1;
-      border: 1px solid #334155;
-      border-radius: 5px;
-      padding: 6px 10px;
-      font-size: 0.85rem;
+      background: #0f172a; color: #cbd5e1; border: 1px solid #334155;
+      border-radius: 5px; padding: 6px 10px; font-size: 0.85rem;
     }
     .depth-label { font-size: 0.82rem; color: #64748b; }
 
+    /* Puzzle info */
+    #puzzle-info { font-size: 0.82rem; color: #94a3b8; line-height: 1.6; }
+    #puzzle-info strong { color: #cbd5e1; }
+
     /* AI move */
     #ai-move-text {
-      font-size: 1.3rem;
-      font-weight: 700;
-      font-family: 'Courier New', monospace;
-      color: #60a5fa;
+      font-size: 1.3rem; font-weight: 700;
+      font-family: 'Courier New', monospace; color: #60a5fa;
     }
-    #ai-nodes-text {
-      font-size: 0.78rem;
-      color: #475569;
-      margin-top: 3px;
-    }
+    #ai-nodes-text { font-size: 0.78rem; color: #475569; margin-top: 3px; }
 
     /* Move history */
-    .history-scroll {
-      max-height: 180px;
-      overflow-y: auto;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.82rem;
-      font-family: 'Courier New', monospace;
-    }
+    .history-scroll { max-height: 160px; overflow-y: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; font-family: 'Courier New', monospace; }
     th {
-      text-align: left;
-      color: #475569;
-      padding: 2px 6px;
-      font-weight: normal;
-      border-bottom: 1px solid #334155;
+      text-align: left; color: #475569; padding: 2px 6px;
+      font-weight: normal; border-bottom: 1px solid #334155;
     }
     td { padding: 3px 6px; }
     tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
 
+    /* Export */
+    .export-row { display: flex; gap: 8px; margin-top: 8px; }
+
     /* Alpha-Beta comparison */
     .compare-grid {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 4px 12px;
-      font-size: 0.82rem;
-      margin-top: 10px;
+      display: grid; grid-template-columns: 1fr auto;
+      gap: 4px 12px; font-size: 0.82rem; margin-top: 10px;
     }
-    .cg-label { color: #64748b; }
-    .cg-value { font-family: monospace; color: #60a5fa; text-align: right; }
-    .cg-reduction { color: #4ade80; }
+    .cg-label    { color: #64748b; }
+    .cg-value    { font-family: monospace; color: #60a5fa; text-align: right; }
+    .cg-reduction{ color: #4ade80; }
+    .cg-move     { color: #f8fafc; }
+    .cg-same     { color: #4ade80; }
+    .cg-diff     { color: #f87171; }
 
     /* Winner banner */
     #winner-banner {
-      display: none;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 700;
-      text-align: center;
+      display: none; padding: 12px 16px; border-radius: 8px;
+      font-size: 1rem; font-weight: 700; text-align: center;
     }
     .banner-white { background: #14532d; color: #4ade80; border: 1px solid #4ade80; }
     .banner-black { background: #450a0a; color: #f87171; border: 1px solid #f87171; }
     .banner-draw  { background: #1c1917; color: #facc15; border: 1px solid #facc15; }
+
+    /* Solution panel */
+    #solution-panel {
+      background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 14px 16px;
+    }
+    #solution-panel .card-label { margin-bottom: 6px; }
+    .solution-disclaimer {
+      font-size: 0.76rem; color: #64748b; margin-bottom: 10px; line-height: 1.5;
+    }
+    #solution-moves {
+      font-family: 'Courier New', monospace; font-size: 0.88rem;
+      color: #94a3b8; margin-bottom: 10px; line-height: 1.9;
+    }
+    .solution-move {
+      display: inline-block; background: #0f172a; border: 1px solid #334155;
+      border-radius: 4px; padding: 2px 7px; margin: 2px 3px; color: #cbd5e1;
+    }
+    .solution-btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    #replay-status { font-size: 0.78rem; color: #60a5fa; margin-top: 6px; }
   </style>
 </head>
 
 <body>
 
-<!-- ── Header ──────────────────────────────────────────────────────────────── -->
 <header>
-  <h1>♟ Pawn Wars</h1>
+  <h1>&#9823; Pawn Wars</h1>
   <span class="tag">Prolog + Python</span>
-  <span class="tag">Minimax α-β</span>
+  <span class="tag">Minimax &#945;-&#946;</span>
   <span class="tag">Janus bridge</span>
 </header>
 
-<!-- ── Main ────────────────────────────────────────────────────────────────── -->
 <main>
 
   <!-- Board column -->
@@ -240,7 +189,7 @@
     <div id="board"></div>
     <div id="thinking-bar">
       <div class="spinner"></div>
-      AI is thinking…
+      AI is thinking&hellip;
     </div>
   </div>
 
@@ -250,26 +199,57 @@
     <!-- Status -->
     <div class="card">
       <div class="card-label">Status</div>
-      <div id="status-text" class="s-white">Your turn (White)</div>
+      <div id="status-text" class="s-white">Loading&hellip;</div>
     </div>
 
-    <!-- Winner banner (shown only on game end) -->
+    <!-- Winner banner -->
     <div id="winner-banner"></div>
+
+    <!-- Solution panel (hidden until game ends) -->
+    <div id="solution-panel" style="display:none">
+      <div class="card-label">Stockfish-Precomputed Optimal Line</div>
+      <p class="solution-disclaimer">
+        This sequence was computed by Stockfish at 40 meganodes before the game.
+        It represents optimal play from the puzzle start position, not a
+        continuation of the game just played.
+      </p>
+      <div id="solution-moves"></div>
+      <div class="solution-btn-row">
+        <button class="btn-green"      id="replay-btn"   onclick="startReplay()">&#9654; Replay</button>
+        <button class="btn-secondary"  id="replay-stop"  onclick="stopReplay()" style="display:none">&#9646;&#9646; Stop</button>
+        <button class="btn-secondary"                    onclick="dismissSolution()">Dismiss</button>
+      </div>
+      <div id="replay-status"></div>
+    </div>
 
     <!-- Controls -->
     <div class="card">
       <div class="card-label">Controls</div>
       <div class="controls">
-        <button class="btn-primary" id="new-game-btn" onclick="newGame()">New Game</button>
-        <span class="depth-label">Search depth</span>
-        <select id="depth-select">
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4" selected>4</option>
-          <option value="5">5</option>
-          <option value="6">6</option>
-        </select>
+        <div class="ctrl-row">
+          <button class="btn-primary" id="new-game-btn" onclick="newGame()">New Game</button>
+          <span class="depth-label">AI depth</span>
+          <select id="depth-select">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+          </select>
+        </div>
+        <div class="ctrl-row">
+          <span class="depth-label">Puzzle type</span>
+          <select id="tag-select">
+            <option value="">Random</option>
+          </select>
+        </div>
       </div>
+    </div>
+
+    <!-- Puzzle info -->
+    <div class="card">
+      <div class="card-label">Current Puzzle</div>
+      <div id="puzzle-info">—</div>
     </div>
 
     <!-- Last AI move -->
@@ -286,23 +266,32 @@
         <table>
           <thead>
             <tr>
-              <th>#</th>
-              <th>White</th>
-              <th>Black</th>
-              <th>Nodes</th>
+              <th>#</th><th>White</th><th>Black</th><th>Nodes</th>
             </tr>
           </thead>
           <tbody id="history-body"></tbody>
         </table>
+      </div>
+      <div class="export-row">
+        <button class="btn-secondary" onclick="exportHistory()">Export JSON</button>
       </div>
     </div>
 
     <!-- Alpha-Beta comparison -->
     <div class="card">
       <div class="card-label">Alpha-Beta Analysis</div>
-      <button class="btn-secondary" id="compare-btn" onclick="runCompare()">
-        Compare AB on vs off
-      </button>
+      <div class="ctrl-row" style="margin-bottom:8px">
+        <button class="btn-secondary" id="compare-btn" onclick="runCompare()">
+          Compare AB on vs off
+        </button>
+        <span class="depth-label">Compare depth</span>
+        <select id="compare-depth-select">
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
       <div id="compare-result" style="display:none">
         <div class="compare-grid">
           <span class="cg-label">With Alpha-Beta</span>
@@ -311,8 +300,14 @@
           <span class="cg-value" id="c-noab">—</span>
           <span class="cg-label">Node reduction</span>
           <span class="cg-value cg-reduction" id="c-reduction">—</span>
-          <span class="cg-label">Search depth</span>
+          <span class="cg-label">Depth used</span>
           <span class="cg-value" id="c-depth">—</span>
+          <span class="cg-label">Move (AB)</span>
+          <span class="cg-value cg-move" id="c-move-ab">—</span>
+          <span class="cg-label">Move (no AB)</span>
+          <span class="cg-value cg-move" id="c-move-noab">—</span>
+          <span class="cg-label">Moves identical</span>
+          <span class="cg-value" id="c-identical">—</span>
         </div>
       </div>
     </div>
@@ -320,26 +315,33 @@
   </div><!-- /info-col -->
 </main>
 
-<!-- ── Scripts ──────────────────────────────────────────────────────────────── -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
 
 <script>
 'use strict';
 
-// ── State mirrored from server ──────────────────────────────────────────────
-var board        = null;
-var legalMoves   = [];   // [{from:'e2', to:'e4'}, …]
-var currentTurn  = 'white';
-var gameOver     = false;
-var isThinking   = false;
-var pendingMove  = null; // set in onDrop, consumed in onSnapEnd
+// ── Client-side state ────────────────────────────────────────────────────────
+var board         = null;
+var legalMoves    = [];
+var currentTurn   = 'white';
+var humanColor    = 'white';
+var gameOver      = false;
+var isThinking    = false;
+var pendingMove   = null;
 
-// ── Board initialisation ─────────────────────────────────────────────────────
-function initBoard(fen) {
+// Solution / replay
+var solutionFens  = [];
+var replayTimer   = null;
+var replayStep    = 0;
+var puzzleFen     = '';   // FEN of the position we loaded
+
+// ── Board initialisation ──────────────────────────────────────────────────────
+function initBoard(fen, orientation) {
   var cfg = {
     draggable:   true,
     position:    fen,
+    orientation: orientation || 'white',
     pieceTheme:  '/static/img/chesspieces/wikipedia/{piece}.png',
     onDragStart: onDragStart,
     onDrop:      onDrop,
@@ -349,14 +351,14 @@ function initBoard(fen) {
   board = Chessboard('board', cfg);
 }
 
-// ── chessboard.js callbacks ──────────────────────────────────────────────────
+// ── chessboard.js callbacks ───────────────────────────────────────────────────
 
 function onDragStart(source, piece) {
-  // Block dragging when: game over, not white's turn, AI is thinking, or black piece
-  if (gameOver || currentTurn !== 'white' || isThinking) return false;
-  if (piece.startsWith('b')) return false;
-  // Block if this piece has no legal moves
-  if (!legalMoves.some(m => m.from === source)) return false;
+  if (gameOver || currentTurn !== humanColor || isThinking) return false;
+  // Only allow dragging the human's own pieces
+  var expectedPiecePrefix = (humanColor === 'white') ? 'w' : 'b';
+  if (piece.charAt(0) !== expectedPiecePrefix) return false;
+  if (!legalMoves.some(function(m) { return m.from === source; })) return false;
   highlightSquares(source);
   return true;
 }
@@ -364,13 +366,11 @@ function onDragStart(source, piece) {
 function onDrop(source, target) {
   removeHighlights();
   if (target === 'offboard') return 'snapback';
-  // Client-side legality check against Prolog-generated list
-  var legal = legalMoves.some(m => m.from === source && m.to === target);
+  var legal = legalMoves.some(function(m) { return m.from === source && m.to === target; });
   if (!legal) return 'snapback';
-  // Store move; the AJAX call fires after the snap animation (onSnapEnd)
   pendingMove = { from: source, to: target };
-  isThinking  = true;   // prevent re-drag before server responds
-  return undefined;     // allow the drop animation to play
+  isThinking  = true;
+  return undefined;
 }
 
 function onSnapEnd() {
@@ -386,8 +386,10 @@ function highlightSquares(source) {
   removeHighlights();
   $('#board [data-square="' + source + '"]').addClass('highlight-src');
   legalMoves
-    .filter(m => m.from === source)
-    .forEach(m => $('#board [data-square="' + m.to + '"]').addClass('highlight-dst'));
+    .filter(function(m) { return m.from === source; })
+    .forEach(function(m) {
+      $('#board [data-square="' + m.to + '"]').addClass('highlight-dst');
+    });
 }
 
 function removeHighlights() {
@@ -409,13 +411,11 @@ function submitMove(from, to) {
       $('#thinking-bar').hide();
       isThinking = false;
 
-      // Step 1: snap board to position after the human move (confirms the move)
-      if (data.fen_after_white) {
-        board.position(data.fen_after_white, false);
+      if (data.fen_after_human) {
+        board.position(data.fen_after_human, false);
       }
 
       if (data.ai_move) {
-        // Step 2: animate the AI's move 400 ms later so the user can see it
         setTimeout(function() {
           board.position(data.fen, true);
           updateInfo(data);
@@ -429,7 +429,6 @@ function submitMove(from, to) {
       isThinking = false;
       var msg = xhr.responseJSON ? xhr.responseJSON.message : 'Server error';
       setStatus('Error: ' + msg, 's-white');
-      // Snap back to last known good position
       $.get('/api/state', function(d) { board.position(d.fen, false); });
     }
   });
@@ -440,16 +439,18 @@ function submitMove(from, to) {
 function updateInfo(data) {
   legalMoves  = data.legal_moves  || [];
   currentTurn = data.turn;
+  humanColor  = data.human_color  || 'white';
   gameOver    = data.game_over;
 
-  // Status line
   if (data.game_over) {
     if (data.winner === 'white') {
-      setStatus('White (You) wins!', 's-win-w');
-      showBanner('You win! \uD83C\uDFC6', 'banner-white');
+      setStatus('White wins!', 's-win-w');
+      showBanner(humanColor === 'white' ? 'You win! \uD83C\uDFC6' : 'AI wins!',
+                 humanColor === 'white' ? 'banner-white' : 'banner-black');
     } else if (data.winner === 'black') {
-      setStatus('Black (AI) wins!', 's-win-b');
-      showBanner('AI wins!', 'banner-black');
+      setStatus('Black wins!', 's-win-b');
+      showBanner(humanColor === 'black' ? 'You win! \uD83C\uDFC6' : 'AI wins!',
+                 humanColor === 'black' ? 'banner-white' : 'banner-black');
     } else if (data.winner === 'draw') {
       setStatus('Draw \u2014 same position three times', 's-draw');
       showBanner('Draw \u2014 repetition', 'banner-draw');
@@ -457,14 +458,16 @@ function updateInfo(data) {
       setStatus('Stalemate \u2014 draw!', 's-draw');
       showBanner('Stalemate \u2014 Draw!', 'banner-draw');
     }
+    showSolutionPanel(data);
   } else {
+    var yourTurn = (data.turn === humanColor);
     setStatus(
-      data.turn === 'white' ? 'Your turn (White)' : 'AI is thinking\u2026',
-      data.turn === 'white' ? 's-white' : 's-black'
+      yourTurn ? 'Your turn (' + (humanColor === 'white' ? 'White' : 'Black') + ')'
+               : 'AI is thinking\u2026',
+      yourTurn ? 's-white' : 's-black'
     );
   }
 
-  // AI move info
   if (data.ai_move) {
     var alg = data.ai_move;
     $('#ai-move-text').text(alg.slice(0,2) + ' \u2192 ' + alg.slice(2));
@@ -474,7 +477,6 @@ function updateInfo(data) {
     );
   }
 
-  // Move history
   renderHistory(data.move_history);
 }
 
@@ -494,47 +496,132 @@ function showBanner(text, cls) {
 
 function renderHistory(history) {
   var tbody = $('#history-body').empty();
-  history.forEach(function(entry, i) {
+  (history || []).forEach(function(entry, i) {
     var nodes = entry.nodes ? entry.nodes.toLocaleString() : '\u2014';
     tbody.append(
       '<tr>' +
         '<td>' + (i + 1) + '</td>' +
-        '<td>' + (entry.white || '') + '</td>' +
-        '<td>' + (entry.black || '') + '</td>' +
+        '<td>' + (entry.white || '\u2014') + '</td>' +
+        '<td>' + (entry.black || '\u2014') + '</td>' +
         '<td>' + nodes + '</td>' +
       '</tr>'
     );
   });
-  // Auto-scroll to latest move
   var el = $('.history-scroll')[0];
   el.scrollTop = el.scrollHeight;
+}
+
+function updatePuzzleInfo(data) {
+  puzzleFen = data.puzzle_fen || '';
+  if (!data.puzzle_id) {
+    $('#puzzle-info').text('Classic start position');
+    return;
+  }
+  var colorLabel = (data.human_color === 'white') ? 'White' : 'Black';
+  $('#puzzle-info').html(
+    '<strong>ID:</strong> ' + data.puzzle_id +
+    ' &nbsp;<strong>Rating:</strong> ' + data.puzzle_rating +
+    ' &nbsp;<strong>You play:</strong> ' + colorLabel
+  );
+}
+
+// ── Solution panel ────────────────────────────────────────────────────────────
+
+function showSolutionPanel(data) {
+  var sol = data.puzzle_solution || [];
+  if (!sol.length) return;
+
+  solutionFens = data.puzzle_sol_fens || [];
+
+  var html = sol.map(function(uci, i) {
+    return '<span class="solution-move">' +
+           (i + 1) + '. ' + uci.slice(0, 2) + '\u2192' + uci.slice(2) +
+           '</span>';
+  }).join('');
+  $('#solution-moves').html(html);
+  $('#replay-status').text('');
+  $('#solution-panel').show();
+}
+
+function dismissSolution() {
+  stopReplay();
+  $('#solution-panel').hide();
+  // Restore current game board position
+  $.get('/api/state', function(d) { board.position(d.fen, false); });
+}
+
+// ── Replay (JS-only, never touches /api/move or backend state) ────────────────
+
+function startReplay() {
+  if (!solutionFens.length) {
+    $('#replay-status').text('No position data available.');
+    return;
+  }
+  stopReplay();
+  replayStep = 0;
+  $('#replay-btn').prop('disabled', true);
+  $('#replay-stop').show();
+  $('#replay-status').text('Playing Stockfish line\u2026');
+  doReplayStep();
+}
+
+function doReplayStep() {
+  if (replayStep >= solutionFens.length) {
+    finishReplay();
+    return;
+  }
+  board.position(solutionFens[replayStep], true);
+  replayStep++;
+  replayTimer = setTimeout(doReplayStep, 700);
+}
+
+function stopReplay() {
+  if (replayTimer) { clearTimeout(replayTimer); replayTimer = null; }
+  finishReplay();
+}
+
+function finishReplay() {
+  $('#replay-btn').prop('disabled', false).text('\u25B6 Replay');
+  $('#replay-stop').hide();
+  if (replayStep >= solutionFens.length && solutionFens.length) {
+    $('#replay-status').text('Done.');
+  }
 }
 
 // ── New game ──────────────────────────────────────────────────────────────────
 
 function newGame() {
+  stopReplay();
   isThinking  = false;
   pendingMove = null;
   $('#thinking-bar').hide();
   $('#winner-banner').hide();
+  $('#solution-panel').hide();
   $('#ai-move-text').text('\u2014');
   $('#ai-nodes-text').text('');
   $('#compare-result').hide();
 
   var depth = parseInt($('#depth-select').val(), 10);
+  var tag   = $('#tag-select').val();
 
   $.ajax({
     url:         '/api/new_game',
     method:      'POST',
     contentType: 'application/json',
-    data:        JSON.stringify({ depth: depth }),
+    data:        JSON.stringify({ depth: depth, tag: tag }),
     success: function(data) {
       gameOver    = false;
-      currentTurn = 'white';
+      currentTurn = data.turn;
+      humanColor  = data.human_color || 'white';
       legalMoves  = data.legal_moves || [];
-      board.position(data.fen, false);
-      setStatus('Your turn (White)', 's-white');
+
+      if (board) board.destroy();
+      initBoard(data.fen, humanColor);
+
+      var colorLabel = humanColor === 'white' ? 'White' : 'Black';
+      setStatus('Your turn (' + colorLabel + ')', 's-white');
       $('#history-body').empty();
+      updatePuzzleInfo(data);
     }
   });
 }
@@ -542,19 +629,29 @@ function newGame() {
 // ── Alpha-Beta comparison ─────────────────────────────────────────────────────
 
 function runCompare() {
-  var depth = parseInt($('#depth-select').val(), 10);
+  var compareDepth = parseInt($('#compare-depth-select').val(), 10);
   $('#compare-btn').prop('disabled', true).text('Running\u2026');
 
   $.ajax({
     url:         '/api/compare',
     method:      'POST',
     contentType: 'application/json',
-    data:        JSON.stringify({ depth: depth }),
+    data:        JSON.stringify({ compare_depth: compareDepth }),
     success: function(data) {
       $('#c-ab').text(data.with_ab.toLocaleString() + ' nodes');
       $('#c-noab').text(data.without_ab.toLocaleString() + ' nodes');
       $('#c-reduction').text(data.reduction + '% fewer');
       $('#c-depth').text(data.depth);
+      $('#c-move-ab').text(formatMove(data.move_ab));
+      $('#c-move-noab').text(formatMove(data.move_noab));
+
+      var identEl = $('#c-identical');
+      if (data.moves_identical) {
+        identEl.text('Yes').removeClass('cg-diff').addClass('cg-same');
+      } else {
+        identEl.text('No').removeClass('cg-same').addClass('cg-diff');
+      }
+
       $('#compare-result').show();
       $('#compare-btn').prop('disabled', false).text('Compare AB on vs off');
     },
@@ -564,14 +661,59 @@ function runCompare() {
   });
 }
 
-// ── Bootstrap: load state from server and render ──────────────────────────────
+function formatMove(uci) {
+  if (!uci || uci === '\u2014') return '\u2014';
+  return uci.slice(0, 2) + '\u2192' + uci.slice(2);
+}
+
+// ── Export JSON ───────────────────────────────────────────────────────────────
+
+function exportHistory() {
+  $.get('/api/export', function(data) {
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url  = URL.createObjectURL(blob);
+    var a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'game_history.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
+// ── Tag dropdown ──────────────────────────────────────────────────────────────
+
+function loadTags() {
+  $.get('/api/puzzles/tags', function(tags) {
+    var sel = $('#tag-select');
+    tags.forEach(function(tag) {
+      var label = tag
+        .replace('passed_pawn_demo',       'Report: Advanced Pawn')
+        .replace('king_opposition_demo',   'Report: King Opposition (Zugzwang)')
+        .replace('pawn_sacrifice_demo',    'Report: Pawn Sacrifice / Promotion');
+      sel.append('<option value="' + tag + '">' + label + '</option>');
+    });
+  });
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+
 $.get('/api/state', function(data) {
   legalMoves  = data.legal_moves || [];
   currentTurn = data.turn;
+  humanColor  = data.human_color || 'white';
   gameOver    = data.game_over;
-  initBoard(data.fen);
+  puzzleFen   = data.puzzle_fen  || '';
+  initBoard(data.fen, humanColor);
   renderHistory(data.move_history);
+  updatePuzzleInfo(data);
+  var colorLabel = humanColor === 'white' ? 'White' : 'Black';
+  setStatus('Your turn (' + colorLabel + ')', 's-white');
 });
+
+loadTags();
+
 </script>
 
 </body>

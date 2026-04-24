@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+.venv/
+venv/
+env/
+
+# Large Lichess dumps (re-download from open database; run build_puzzle_db.py)
+lichess_db_puzzle.csv
+lichess_pawn_endgames.pgn
+lichess_db_puzzle.csv.zst

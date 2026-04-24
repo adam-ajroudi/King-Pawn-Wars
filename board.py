@@ -151,15 +151,49 @@ def check_winner(board: dict):
     return None
 
 
-# ── FEN translation (for rendering only) ─────────────────────────────────────
+# ── FEN translation ──────────────────────────────────────────────────────────
 
-# FEN piece symbols
+# FEN piece symbols (board → FEN)
 _FEN_SYMBOL = {
     ("white", "king"):  "K",
     ("white", "pawn"):  "P",
     ("black", "king"):  "k",
     ("black", "pawn"):  "p",
 }
+
+# FEN symbol → piece tuple (FEN → board).  Only kings and pawns are mapped;
+# other symbols are silently ignored (pawn_wars.pl only knows kings and pawns).
+_PIECE_FROM_FEN: dict[str, tuple] = {
+    "K": ("white", "king"),
+    "P": ("white", "pawn"),
+    "k": ("black", "king"),
+    "p": ("black", "pawn"),
+}
+
+
+def fen_to_board(fen: str) -> dict:
+    """
+    Parse a FEN string's piece-placement field into a board dict.
+    Only kings and pawns are included; other pieces are skipped.
+    The active-colour and remaining FEN fields are not parsed here —
+    turn management is handled by _state in app.py.
+    """
+    placement = fen.split()[0]
+    board: dict = {}
+    row = 8
+    col = 1
+    for ch in placement:
+        if ch == "/":
+            row -= 1
+            col = 1
+        elif ch.isdigit():
+            col += int(ch)
+        else:
+            piece = _PIECE_FROM_FEN.get(ch)
+            if piece:
+                board[(col, row)] = piece
+            col += 1   # advance even for unrecognised symbols
+    return board
 
 
 def board_to_fen(board: dict) -> str:
