@@ -30,11 +30,19 @@ import chess  # python-chess: ALLOWED only in this offline preprocessing script
 # ── Demo tag assignments ─────────────────────────────────────────────────────
 # The FIRST puzzle that qualifies for each theme gets an extra named tag so the
 # three report-specific positions can be loaded by name from the UI.
+#
+# `advancedPawn` is NOT assigned here: the first hit in CSV order is often a
+# one-move promotion (bad for demos / "first to promote wins" grading). We pin
+# `passed_pawn_demo` to a stable Lichess id after the build (see _PIN_DEMO_TAGS).
 _DEMO_SLOTS: list[tuple[str, str]] = [
-    ("advancedPawn", "passed_pawn_demo"),     # closest to passed-pawn structure in pawnEndgame
-    ("zugzwang",     "king_opposition_demo"),  # zugzwang = king opposition / key square
-    ("promotion",    "pawn_sacrifice_demo"),   # pawn race / sacrifice to promote
+    ("zugzwang",  "king_opposition_demo"),   # zugzwang = king opposition / key square
+    ("promotion", "pawn_sacrifice_demo"),     # pawn race / sacrifice to promote
 ]
+
+# Named report puzzles: puzzle id → demo tag (applied after CSV scan if id exists).
+_PIN_DEMO_TAGS: dict[str, str] = {
+    "000Vc": "passed_pawn_demo",  # pawn race / passed pawn; black to move, no instant promotion
+}
 
 _KINGS_AND_PAWNS = {chess.KING, chess.PAWN}
 
@@ -163,6 +171,19 @@ def build_db(input_path: Path, output_path: Path, limit: int) -> None:
                 "tags":           themes + extra_tags,
             })
 
+    # Pin stable report demos by Lichess id (see _PIN_DEMO_TAGS).
+    for pid, demo_tag in _PIN_DEMO_TAGS.items():
+        for rec in records:
+            tags = rec.get("tags", [])
+            if demo_tag in tags:
+                rec["tags"] = [t for t in tags if t != demo_tag]
+        pinned = next((r for r in records if r.get("id") == pid), None)
+        if pinned is not None:
+            if demo_tag not in pinned["tags"]:
+                pinned["tags"].append(demo_tag)
+        else:
+            print(f"  WARNING: demo tag {demo_tag!r} pinned to id {pid!r} but that puzzle is not in the build.")
+
     print(f"Writing {len(records):,} puzzles ({skipped:,} skipped) -> {output_path} ...")
     with output_path.open("w", encoding="utf-8") as fh:
         json.dump(records, fh, separators=(",", ":"))
@@ -174,6 +195,9 @@ def build_db(input_path: Path, output_path: Path, limit: int) -> None:
     for _, demo_tag in _DEMO_SLOTS:
         status = "assigned" if demo_tag in demo_done else "NOT FOUND – raise --limit or adjust theme filter"
         print(f"  {demo_tag}: {status}")
+    for pid, demo_tag in _PIN_DEMO_TAGS.items():
+        ok = any(demo_tag in r.get("tags", []) and r.get("id") == pid for r in records)
+        print(f"  {demo_tag} (pinned {pid}): {'assigned' if ok else 'NOT FOUND'}")
 
 
 def main() -> None:

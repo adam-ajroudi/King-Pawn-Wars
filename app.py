@@ -40,6 +40,31 @@ app = Flask(__name__)
 _PUZZLES:   list[dict]        = []
 _TAG_INDEX: dict[str, list[int]] = {}   # tag → list of indices into _PUZZLES
 
+# Hard-pinned report demo puzzles.  These override any tag-based lookup so the
+# specific position is always loaded regardless of puzzles.json tag ordering.
+# Chosen because neither side can win in a single move from the start.
+#
+#   000Vc  –  Black to move.  White pawns on e5/h5/f4 (3+ moves from promotion).
+#             Black pawns on d5/g6.  Classic passed-pawn / pawn-race endgame.
+_DEMO_PINS: dict[str, dict] = {
+    "passed_pawn_demo": {
+        "id":           "000Vc",
+        "fen":          "8/8/4k1p1/2KpP2P/5P2/8/8/8 b - - 0 53",
+        "human_color":  "black",
+        "solution":     ["g6h5", "f4f5", "e6e5", "f5f6", "e5f6"],
+        "solution_fens": [
+            "8/8/4k1p1/2KpP2P/5P2/8/8/8 b - - 0 53",
+            "8/8/4k3/2KpP2p/5P2/8/8/8 w - - 0 54",
+            "8/8/4k3/2KpPP1p/8/8/8/8 b - - 0 54",
+            "8/8/8/2KpkP1p/8/8/8/8 w - - 0 55",
+            "8/8/5P2/2Kpk2p/8/8/8/8 b - - 0 55",
+            "8/8/5k2/2Kp3p/8/8/8/8 w - - 0 56",
+        ],
+        "rating":       1574,
+        "tags":         ["crushing", "endgame", "long", "pawnEndgame", "passed_pawn_demo"],
+    },
+}
+
 
 def _load_puzzles(path: str = "puzzles.json") -> None:
     """Load puzzles.json into module-level _PUZZLES and _TAG_INDEX."""
@@ -295,7 +320,9 @@ def api_new_game():
     tag   = (data.get("tag") or "").strip()
 
     puzzle = None
-    if tag and tag in _TAG_INDEX:
+    if tag and tag in _DEMO_PINS:
+        puzzle = _DEMO_PINS[tag]
+    elif tag and tag in _TAG_INDEX:
         puzzle = _PUZZLES[_random.choice(_TAG_INDEX[tag])]
     elif _PUZZLES:
         puzzle = _random.choice(_PUZZLES)
