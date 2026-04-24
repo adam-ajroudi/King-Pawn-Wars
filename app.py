@@ -304,6 +304,31 @@ def api_new_game():
     return jsonify({"status": "ok", **_state_payload()})
 
 
+@app.route("/api/replay", methods=["POST"])
+def api_replay():
+    """Restart the current puzzle from its original starting position."""
+    data  = request.get_json(silent=True) or {}
+    depth = max(1, min(6, int(data.get("depth", _state["ai_depth"]))))
+
+    # Try to find the exact same puzzle by ID first
+    puzzle_id = _state.get("puzzle_id", "")
+    puzzle = next((p for p in _PUZZLES if p.get("id") == puzzle_id), None)
+
+    # Fallback: rebuild a minimal puzzle dict from the stored state
+    if puzzle is None and _state.get("puzzle_fen"):
+        puzzle = {
+            "fen":           _state["puzzle_fen"],
+            "human_color":   _state.get("human_color", "white"),
+            "solution":      _state.get("puzzle_solution", []),
+            "solution_fens": _state.get("puzzle_sol_fens", []),
+            "id":            _state.get("puzzle_id", ""),
+            "rating":        _state.get("puzzle_rating", 0),
+        }
+
+    _reset(depth, puzzle)
+    return jsonify({"status": "ok", **_state_payload()})
+
+
 @app.route("/api/move", methods=["POST"])
 def api_move():
     if _state["game_over"]:
@@ -360,7 +385,7 @@ def api_move():
         return jsonify({"status": "ok", "ai_move": None, **_state_payload()})
 
     if _register_position(board, ai_color):
-        _state.update(game_over=True, winner="draw", turn="none")
+        _state.update(game_over=True, winner="draw_repetition", turn="none")
         if human_color == "white":
             history_entry["black"] = "(draw)"
         else:
@@ -408,7 +433,7 @@ def api_move():
     if winner:
         _state.update(game_over=True, winner=winner, turn="none")
     elif _register_position(board, human_color):
-        _state.update(game_over=True, winner="draw", turn="none")
+        _state.update(game_over=True, winner="draw_repetition", turn="none")
     else:
         _state["turn"] = human_color
         # Check if human now has no legal moves (stalemate / checkmate)

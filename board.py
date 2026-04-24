@@ -142,16 +142,16 @@ def apply_move(board: dict, move: tuple) -> dict:
 def check_winner(board: dict):
     """
     Query Prolog for a win condition on *board*.
-    Returns "white", "black", "draw", or None.
+    Returns "white", "black", "draw_kings_only", or None.
 
     Kings-only guard: if both sides have zero pawns the Prolog win_condition
     would incorrectly declare White the winner (first matching clause fires).
-    We intercept that case and return "draw" before calling Prolog.
+    We intercept that case and return "draw_kings_only" before calling Prolog.
     """
     has_white_pawn = any(v == ("white", "pawn") for v in board.values())
     has_black_pawn = any(v == ("black", "pawn") for v in board.values())
     if not has_white_pawn and not has_black_pawn:
-        return "draw"
+        return "draw_kings_only"
     board_str = board_to_prolog_str(board)
     result = janus.query_once(f"win_condition({board_str}, Winner)")
     if result:

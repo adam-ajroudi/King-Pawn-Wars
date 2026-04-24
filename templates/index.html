@@ -450,9 +450,12 @@ function updateInfo(data) {
       setStatus(winColor + ' wins!', data.winner === 'white' ? 's-win-w' : 's-win-b');
       showBanner(youWin ? 'You win! \uD83C\uDFC6' : 'AI wins!',
                  youWin ? 'banner-white' : 'banner-black');
-    } else if (data.winner === 'draw') {
+    } else if (data.winner === 'draw_repetition') {
+      setStatus('Draw \u2014 repetition', 's-draw');
+      showBanner('Draw \u2014 Repetition', 'banner-draw');
+    } else if (data.winner === 'draw_kings_only') {
       setStatus('Draw \u2014 kings only', 's-draw');
-      showBanner('Draw \u2014 kings only', 'banner-draw');
+      showBanner('Draw \u2014 Kings Only', 'banner-draw');
     } else {
       setStatus('Stalemate \u2014 draw!', 's-draw');
       showBanner('Stalemate \u2014 Draw!', 'banner-draw');
@@ -487,10 +490,49 @@ function setStatus(text, cls) {
 
 function showBanner(text, cls) {
   $('#winner-banner')
-    .text(text)
+    .html(
+      '<span style="vertical-align:middle">' + text + '</span>' +
+      '<button class="btn-secondary" onclick="replaySameGame()" style="margin-left:14px;font-size:0.82rem;vertical-align:middle;">&#8635; Replay</button>' +
+      '<button class="btn-secondary" onclick="newGame()" style="margin-left:8px;font-size:0.82rem;vertical-align:middle;">&#9654; New Game</button>'
+    )
     .removeClass('banner-white banner-black banner-draw')
     .addClass(cls)
     .show();
+}
+
+function replaySameGame() {
+  stopReplay();
+  isThinking  = false;
+  pendingMove = null;
+  $('#thinking-bar').hide();
+  $('#winner-banner').hide();
+  $('#solution-panel').hide();
+  $('#ai-move-text').text('\u2014');
+  $('#ai-nodes-text').text('');
+  $('#compare-result').hide();
+
+  var depth = parseInt($('#depth-select').val(), 10);
+
+  $.ajax({
+    url:         '/api/replay',
+    method:      'POST',
+    contentType: 'application/json',
+    data:        JSON.stringify({ depth: depth }),
+    success: function(data) {
+      gameOver    = false;
+      currentTurn = data.turn;
+      humanColor  = data.human_color || 'white';
+      legalMoves  = data.legal_moves || [];
+
+      if (board) board.destroy();
+      initBoard(data.fen, humanColor);
+
+      var colorLabel = humanColor === 'white' ? 'White' : 'Black';
+      setStatus('Your turn (' + colorLabel + ')', 's-white');
+      $('#history-body').empty();
+      updatePuzzleInfo(data);
+    }
+  });
 }
 
 function renderHistory(history) {
