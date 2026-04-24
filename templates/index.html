@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pawn Wars — Python + Prolog AI</title>
+
+  <!-- chessboard.js styles -->
+  <link rel="stylesheet"
+    href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+
+  <style>
+    /* ── Reset & base ──────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f172a;
+      color: #cbd5e1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ────────────────────────────────────────────────────────── */
+    header {
+      background: #1e293b;
+      border-bottom: 2px solid #334155;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.5px;
+    }
+    header .tag {
+      font-size: 0.72rem;
+      color: #64748b;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+
+    /* ── Main layout ───────────────────────────────────────────────────── */
+    main {
+      flex: 1;
+      display: flex;
+      gap: 24px;
+      padding: 24px 28px;
+      max-width: 1060px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ── Board column ──────────────────────────────────────────────────── */
+    .board-col {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    #board { width: 480px; }
+
+    /* Square highlights (legal move indicators) */
+    #board .square-55d63 { position: relative; }
+    .highlight-src  { box-shadow: inset 0 0 0 4px #f59e0b; }
+    .highlight-dst  { box-shadow: inset 0 0 0 4px #22c55e; }
+
+    /* Thinking bar below board */
+    #thinking-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #60a5fa;
+    }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid #334155;
+      border-top-color: #60a5fa;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Info column ───────────────────────────────────────────────────── */
+    .info-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-width: 240px;
+    }
+
+    /* ── Cards ─────────────────────────────────────────────────────────── */
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+    .card-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #475569;
+      margin-bottom: 8px;
+    }
+
+    /* Status */
+    #status-text {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    .s-white  { color: #f8fafc; }
+    .s-black  { color: #64748b; }
+    .s-win-w  { color: #4ade80; }
+    .s-win-b  { color: #f87171; }
+    .s-draw   { color: #facc15; }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      padding: 7px 16px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: filter 0.15s;
+    }
+    button:hover:not(:disabled) { filter: brightness(1.15); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-primary   { background: #3b82f6; color: #fff; }
+    .btn-secondary { background: #334155; color: #cbd5e1; }
+
+    select {
+      background: #0f172a;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      border-radius: 5px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+    }
+    .depth-label { font-size: 0.82rem; color: #64748b; }
+
+    /* AI move */
+    #ai-move-text {
+      font-size: 1.3rem;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      color: #60a5fa;
+    }
+    #ai-nodes-text {
+      font-size: 0.78rem;
+      color: #475569;
+      margin-top: 3px;
+    }
+
+    /* Move history */
+    .history-scroll {
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      font-family: 'Courier New', monospace;
+    }
+    th {
+      text-align: left;
+      color: #475569;
+      padding: 2px 6px;
+      font-weight: normal;
+      border-bottom: 1px solid #334155;
+    }
+    td { padding: 3px 6px; }
+    tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
+
+    /* Alpha-Beta comparison */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 4px 12px;
+      font-size: 0.82rem;
+      margin-top: 10px;
+    }
+    .cg-label { color: #64748b; }
+    .cg-value { font-family: monospace; color: #60a5fa; text-align: right; }
+    .cg-reduction { color: #4ade80; }
+
+    /* Winner banner */
+    #winner-banner {
+      display: none;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .banner-white { background: #14532d; color: #4ade80; border: 1px solid #4ade80; }
+    .banner-black { background: #450a0a; color: #f87171; border: 1px solid #f87171; }
+    .banner-draw  { background: #1c1917; color: #facc15; border: 1px solid #facc15; }
+  </style>
+</head>
+
+<body>
+
+<!-- ── Header ──────────────────────────────────────────────────────────────── -->
+<header>
+  <h1>♟ Pawn Wars</h1>
+  <span class="tag">Prolog + Python</span>
+  <span class="tag">Minimax α-β</span>
+  <span class="tag">Janus bridge</span>
+</header>
+
+<!-- ── Main ────────────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Board column -->
+  <div class="board-col">
+    <div id="board"></div>
+    <div id="thinking-bar">
+      <div class="spinner"></div>
+      AI is thinking…
+    </div>
+  </div>
+
+  <!-- Info column -->
+  <div class="info-col">
+
+    <!-- Status -->
+    <div class="card">
+      <div class="card-label">Status</div>
+      <div id="status-text" class="s-white">Your turn (White)</div>
+    </div>
+
+    <!-- Winner banner (shown only on game end) -->
+    <div id="winner-banner"></div>
+
+    <!-- Controls -->
+    <div class="card">
+      <div class="card-label">Controls</div>
+      <div class="controls">
+        <button class="btn-primary" id="new-game-btn" onclick="newGame()">New Game</button>
+        <span class="depth-label">Search depth</span>
+        <select id="depth-select">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Last AI move -->
+    <div class="card">
+      <div class="card-label">Last AI Move</div>
+      <div id="ai-move-text">—</div>
+      <div id="ai-nodes-text"></div>
+    </div>
+
+    <!-- Move history -->
+    <div class="card">
+      <div class="card-label">Move History</div>
+      <div class="history-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>White</th>
+              <th>Black</th>
+              <th>Nodes</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Alpha-Beta comparison -->
+    <div class="card">
+      <div class="card-label">Alpha-Beta Analysis</div>
+      <button class="btn-secondary" id="compare-btn" onclick="runCompare()">
+        Compare AB on vs off
+      </button>
+      <div id="compare-result" style="display:none">
+        <div class="compare-grid">
+          <span class="cg-label">With Alpha-Beta</span>
+          <span class="cg-value" id="c-ab">—</span>
+          <span class="cg-label">Without Alpha-Beta</span>
+          <span class="cg-value" id="c-noab">—</span>
+          <span class="cg-label">Node reduction</span>
+          <span class="cg-value cg-reduction" id="c-reduction">—</span>
+          <span class="cg-label">Search depth</span>
+          <span class="cg-value" id="c-depth">—</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /info-col -->
+</main>
+
+<!-- ── Scripts ──────────────────────────────────────────────────────────────── -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+
+<script>
+'use strict';
+
+// ── State mirrored from server ──────────────────────────────────────────────
+var board        = null;
+var legalMoves   = [];   // [{from:'e2', to:'e4'}, …]
+var currentTurn  = 'white';
+var gameOver     = false;
+var isThinking   = false;
+var pendingMove  = null; // set in onDrop, consumed in onSnapEnd
+
+// ── Board initialisation ─────────────────────────────────────────────────────
+function initBoard(fen) {
+  var cfg = {
+    draggable:   true,
+    position:    fen,
+    pieceTheme:  '/static/img/chesspieces/wikipedia/{piece}.png',
+    onDragStart: onDragStart,
+    onDrop:      onDrop,
+    onSnapEnd:   onSnapEnd,
+  };
+  if (board) board.destroy();
+  board = Chessboard('board', cfg);
+}
+
+// ── chessboard.js callbacks ──────────────────────────────────────────────────
+
+function onDragStart(source, piece) {
+  // Block dragging when: game over, not white's turn, AI is thinking, or black piece
+  if (gameOver || currentTurn !== 'white' || isThinking) return false;
+  if (piece.startsWith('b')) return false;
+  // Block if this piece has no legal moves
+  if (!legalMoves.some(m => m.from === source)) return false;
+  highlightSquares(source);
+  return true;
+}
+
+function onDrop(source, target) {
+  removeHighlights();
+  if (target === 'offboard') return 'snapback';
+  // Client-side legality check against Prolog-generated list
+  var legal = legalMoves.some(m => m.from === source && m.to === target);
+  if (!legal) return 'snapback';
+  // Store move; the AJAX call fires after the snap animation (onSnapEnd)
+  pendingMove = { from: source, to: target };
+  isThinking  = true;   // prevent re-drag before server responds
+  return undefined;     // allow the drop animation to play
+}
+
+function onSnapEnd() {
+  if (!pendingMove) return;
+  var move   = pendingMove;
+  pendingMove = null;
+  submitMove(move.from, move.to);
+}
+
+// ── Square highlighting ───────────────────────────────────────────────────────
+
+function highlightSquares(source) {
+  removeHighlights();
+  $('#board [data-square="' + source + '"]').addClass('highlight-src');
+  legalMoves
+    .filter(m => m.from === source)
+    .forEach(m => $('#board [data-square="' + m.to + '"]').addClass('highlight-dst'));
+}
+
+function removeHighlights() {
+  $('#board [data-square]').removeClass('highlight-src highlight-dst');
+}
+
+// ── Move submission ───────────────────────────────────────────────────────────
+
+function submitMove(from, to) {
+  setStatus('AI is thinking\u2026', 's-black');
+  $('#thinking-bar').show();
+
+  $.ajax({
+    url:         '/api/move',
+    method:      'POST',
+    contentType: 'application/json',
+    data:        JSON.stringify({ from: from, to: to }),
+    success: function(data) {
+      $('#thinking-bar').hide();
+      isThinking = false;
+
+      // Step 1: snap board to position after the human move (confirms the move)
+      if (data.fen_after_white) {
+        board.position(data.fen_after_white, false);
+      }
+
+      if (data.ai_move) {
+        // Step 2: animate the AI's move 400 ms later so the user can see it
+        setTimeout(function() {
+          board.position(data.fen, true);
+          updateInfo(data);
+        }, 420);
+      } else {
+        updateInfo(data);
+      }
+    },
+    error: function(xhr) {
+      $('#thinking-bar').hide();
+      isThinking = false;
+      var msg = xhr.responseJSON ? xhr.responseJSON.message : 'Server error';
+      setStatus('Error: ' + msg, 's-white');
+      // Snap back to last known good position
+      $.get('/api/state', function(d) { board.position(d.fen, false); });
+    }
+  });
+}
+
+// ── UI update ─────────────────────────────────────────────────────────────────
+
+function updateInfo(data) {
+  legalMoves  = data.legal_moves  || [];
+  currentTurn = data.turn;
+  gameOver    = data.game_over;
+
+  // Status line
+  if (data.game_over) {
+    if (data.winner === 'white') {
+      setStatus('White (You) wins!', 's-win-w');
+      showBanner('You win! \uD83C\uDFC6', 'banner-white');
+    } else if (data.winner === 'black') {
+      setStatus('Black (AI) wins!', 's-win-b');
+      showBanner('AI wins!', 'banner-black');
+    } else {
+      setStatus('Stalemate \u2014 draw!', 's-draw');
+      showBanner('Stalemate \u2014 Draw!', 'banner-draw');
+    }
+  } else {
+    setStatus(
+      data.turn === 'white' ? 'Your turn (White)' : 'AI is thinking\u2026',
+      data.turn === 'white' ? 's-white' : 's-black'
+    );
+  }
+
+  // AI move info
+  if (data.ai_move) {
+    var alg = data.ai_move;
+    $('#ai-move-text').text(alg.slice(0,2) + ' \u2192 ' + alg.slice(2));
+    $('#ai-nodes-text').text(
+      data.last_ai_nodes.toLocaleString() +
+      ' nodes \u00b7 depth ' + data.ai_depth
+    );
+  }
+
+  // Move history
+  renderHistory(data.move_history);
+}
+
+function setStatus(text, cls) {
+  $('#status-text').text(text)
+    .removeClass('s-white s-black s-win-w s-win-b s-draw')
+    .addClass(cls);
+}
+
+function showBanner(text, cls) {
+  $('#winner-banner')
+    .text(text)
+    .removeClass('banner-white banner-black banner-draw')
+    .addClass(cls)
+    .show();
+}
+
+function renderHistory(history) {
+  var tbody = $('#history-body').empty();
+  history.forEach(function(entry, i) {
+    var nodes = entry.nodes ? entry.nodes.toLocaleString() : '\u2014';
+    tbody.append(
+      '<tr>' +
+        '<td>' + (i + 1) + '</td>' +
+        '<td>' + (entry.white || '') + '</td>' +
+        '<td>' + (entry.black || '') + '</td>' +
+        '<td>' + nodes + '</td>' +
+      '</tr>'
+    );
+  });
+  // Auto-scroll to latest move
+  var el = $('.history-scroll')[0];
+  el.scrollTop = el.scrollHeight;
+}
+
+// ── New game ──────────────────────────────────────────────────────────────────
+
+function newGame() {
+  isThinking  = false;
+  pendingMove = null;
+  $('#thinking-bar').hide();
+  $('#winner-banner').hide();
+  $('#ai-move-text').text('\u2014');
+  $('#ai-nodes-text').text('');
+  $('#compare-result').hide();
+
+  var depth = parseInt($('#depth-select').val(), 10);
+
+  $.ajax({
+    url:         '/api/new_game',
+    method:      'POST',
+    contentType: 'application/json',
+    data:        JSON.stringify({ depth: depth }),
+    success: function(data) {
+      gameOver    = false;
+      currentTurn = 'white';
+      legalMoves  = data.legal_moves || [];
+      board.position(data.fen, false);
+      setStatus('Your turn (White)', 's-white');
+      $('#history-body').empty();
+    }
+  });
+}
+
+// ── Alpha-Beta comparison ─────────────────────────────────────────────────────
+
+function runCompare() {
+  var depth = parseInt($('#depth-select').val(), 10);
+  $('#compare-btn').prop('disabled', true).text('Running\u2026');
+
+  $.ajax({
+    url:         '/api/compare',
+    method:      'POST',
+    contentType: 'application/json',
+    data:        JSON.stringify({ depth: depth }),
+    success: function(data) {
+      $('#c-ab').text(data.with_ab.toLocaleString() + ' nodes');
+      $('#c-noab').text(data.without_ab.toLocaleString() + ' nodes');
+      $('#c-reduction').text(data.reduction + '% fewer');
+      $('#c-depth').text(data.depth);
+      $('#compare-result').show();
+      $('#compare-btn').prop('disabled', false).text('Compare AB on vs off');
+    },
+    error: function() {
+      $('#compare-btn').prop('disabled', false).text('Compare AB on vs off');
+    }
+  });
+}
+
+// ── Bootstrap: load state from server and render ──────────────────────────────
+$.get('/api/state', function(data) {
+  legalMoves  = data.legal_moves || [];
+  currentTurn = data.turn;
+  gameOver    = data.game_over;
+  initBoard(data.fen);
+  renderHistory(data.move_history);
+});
+</script>
+
+</body>
+</html>
